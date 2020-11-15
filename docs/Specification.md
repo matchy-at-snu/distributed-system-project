@@ -18,7 +18,6 @@
       - [TIP: Kubernetes Scheduling Principles](#tip-kubernetes-scheduling-principles)
       - [TIP: Kubernetes custom-scheduler](#tip-kubernetes-custom-scheduler)
   - [Step 6: Conclusion and Report (for each team_member)](#step-6-conclusion-and-report-for-each-team_member)
--
 
 ## Introduction
 
@@ -28,7 +27,7 @@ To complete the project, you need to take the following steps:
 
 1. Configure and setup a `Kubernetes` cluster on Google Cloud Platform (GCP).
 2. Develop a WordLetterCount application using `Spark` APIs and execute this on a `Spark` framework running on the GCP `Kubernetes` cluster as described and configured in Step 1.
-3. Develop your own `WorkdLetterCount` batch processing application without using any `Spark` APIs. Execute your code on the `Kubernetes` cluster.
+3. Develop your own `WordLetterCount` batch processing application without using any `Spark` APIs. Execute your code on the `Kubernetes` cluster.
 4. Compare the performance of some applications running concurrently on the Cloud cluster in various scenarios.
 5. Design, build and evaluate your own resource scheduler to achieve certain performance goals given below
 6. Write an individual report to describe the development process of your project, the design of the scheduler, your individual contribution to the project and to present, discuss the performance evaluation results and troubleshooting points.
@@ -195,9 +194,9 @@ Once a suitable node is found, kube-scheduler sends a message to `kube-apiserver
 
 You can find more information about the `kubernetes` scheduler at the following website:
 
-1. https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/
+1. [https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/](https://kubernetes.io/docs/concepts/scheduling-eviction/kube-scheduler/)
 
-2. https://bcho.tistory.com/1344
+2. [https://bcho.tistory.com/1344](https://bcho.tistory.com/1344)
 
 #### TIP: Kubernetes custom-scheduler
 
@@ -206,11 +205,11 @@ In most cases, you can perform the desired scheduling with only the kube-schedul
 You can get help writing a custom scheduler at the following websites.
 
 1. Writing custom Kubernetes scheduler:
-https://banzaicloud.com/blog/k8s-custom-scheduler/
+[https://banzaicloud.com/blog/k8s-custom-scheduler/](https://banzaicloud.com/blog/k8s-custom-scheduler/)
 2. Example source code:
-https://github.com/banzaicloud/random-scheduler/blob/master/cmd/scheduler/main.go
+[https://github.com/banzaicloud/random-scheduler/blob/master/cmd/scheduler/main.go](https://github.com/banzaicloud/random-scheduler/blob/master/cmd/scheduler/main.go)
 3. Example source code2:
-https://github.com/kelseyhightower/scheduler
+[https://github.com/kelseyhightower/scheduler](https://github.com/kelseyhightower/scheduler)
 
 ## Step 6: Conclusion and Report (for each team_member)
 
