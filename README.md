@@ -2,15 +2,16 @@
 
 This is the course project folder of [M1522.006300 Distributed Systems](http://dcslab.snu.ac.kr/courses/ds2020f/) of Group 17.
 
-## Tutorials
+## Project Description
 
-The project specification is written in [Specification.md](Specification.md).
+The goal of this project is to deploy and manage a prototype cloud cluster running batch processing `WordLetterCount` applications. There are two `WordLetterCount` applications implemented in different ways: one used the `Spark` API, the other used `Hadoop` API and a self-designed resource scheduler.
 
-Refer to [GCP guide](GCPguide.md) about how to configure, access and use your GCP clusters.
+## Developer Tutorials
 
-## Goals
+Refer to the `docs` folder for useful guides.
 
-Write a script to automatically configure and launch a Kubernetes cluster on GCP.
-The reference architecture must include 1 master node of instance type
-`Ubuntu-E2-standard-2`(vCPU2, 4GB) and 3 worker nodes of instance type
-`Ubuntu-E2-standard-2` (vCPU2, 4GB).
+The project specification is written in [Specification.md](docs/Specification.md).
+
+Refer to [GCP guide](/docs/GCP_guide.md) for a detailed tutorial on how to configure, access and use your GCP clusters.
+
+Our project ID is `peaceful-fact-294309`, you can use the web-based dashboard [GCP Console](https://console.cloud.google.com/) to view our cluster, VMs and Pods.
