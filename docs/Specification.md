@@ -1,4 +1,24 @@
-# Distributed Systems Project Kubernetes Specifications (modified on 10/30)
+# Distributed Systems Project Kubernetes Specifications
+
+- [Distributed Systems Project Kubernetes Specifications](#distributed-systems-project-kubernetes-specifications)
+  - [Introduction](#introduction)
+    - [Basic information of `Kubernetes`](#basic-information-of-kubernetes)
+  - [Step 1: Kubernetes Cluster Setup (for team_member A)](#step-1-kubernetes-cluster-setup-for-team_member-a)
+  - [Step 2: `Spark` Implementation of a `WordLetterCount` application on `Kubernetes` and GCP (for team_member B)](#step-2-spark-implementation-of-a-wordlettercount-application-on-kubernetes-and-gcp-for-team_member-b)
+    - [Requirements](#requirements)
+    - [Column meaning](#column-meaning)
+    - [Notes:](#notes)
+  - [Step 3: Custom-built WordLetterCount on Cloud Cluster (for team_member A)](#step-3-custom-built-wordlettercount-on-cloud-cluster-for-team_member-a)
+    - [Requirements](#requirements-1)
+  - [Step 4: Performance Experiments (for team_member B)](#step-4-performance-experiments-for-team_member-b)
+  - [Step5: Design, Build and Evaluate a New Resource Scheduler (for team_member A)](#step5-design-build-and-evaluate-a-new-resource-scheduler-for-team_member-a)
+    - [Step 5a: Static Allocation](#step-5a-static-allocation)
+    - [Step 5b: Dynamic Allocation](#step-5b-dynamic-allocation)
+    - [Tips](#tips)
+      - [TIP: Kubernetes Scheduling Principles](#tip-kubernetes-scheduling-principles)
+      - [TIP: Kubernetes custom-scheduler](#tip-kubernetes-custom-scheduler)
+  - [Step 6: Conclusion and Report (for each team_member)](#step-6-conclusion-and-report-for-each-team_member)
+-
 
 ## Introduction
 
@@ -196,7 +216,7 @@ https://github.com/kelseyhightower/scheduler
 
 Write an individual (per group member) project report. You should work independently on the report. However, the coursework is designed to be a team-work project and both group members should equally work for each step of the coursework. The project report must contain the following sections.
 
-```
+```nothing
 Step1. Spark and Kubernetes (up to 1 page)
    Outline your approach in Step 1.
 
