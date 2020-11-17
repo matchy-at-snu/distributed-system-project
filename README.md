@@ -15,3 +15,7 @@ The project specification is written in [Specification.md](docs/Specification.md
 Refer to [GCP guide](/docs/GCP_guide.md) for a detailed tutorial on how to configure, access and use your GCP clusters.
 
 Our project ID is `peaceful-fact-294309`, you can use the web-based dashboard [GCP Console](https://console.cloud.google.com/) to view our cluster, VMs and Pods.
+
+## To-Dos
+
+- [ ] Deploy Google Dataproc on GKE (ref: [Dataproc on Google Kubernetes Engine](https://cloud.google.com/dataproc/docs/concepts/jobs/dataproc-gke))
