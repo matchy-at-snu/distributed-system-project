@@ -61,7 +61,7 @@ Just follow the [guide](https://cloud.google.com/sdk/docs/install#deb) Google pr
 We can use `gcloud container create NAME` to create a default cluster with name `NAME`. We can also specify more options to configure our cluster.
 
 ```bash
-gcloud container create example-cluster \
+gcloud container clusters create example-cluster \
     --zone asia-northeast3-a \
     --num-nodes 3 \
     --image-type UBUNTU \
