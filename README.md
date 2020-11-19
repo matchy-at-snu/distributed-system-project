@@ -10,7 +10,7 @@ The goal of this project is to deploy and manage a prototype cloud cluster runni
 
 Refer to the `docs` folder for useful guides.
 
-The project specification is written in [Specification.md](docs/Specification.md).
+The project specification is specified in [Specification.md](docs/Specification.md).
 
 Refer to [GCP guide](/docs/GCP_guide.md) for a detailed tutorial on how to configure, access and use your GCP clusters.
 
@@ -19,3 +19,5 @@ Our project ID is `peaceful-fact-294309`, you can use the web-based dashboard [G
 ## To-Dos
 
 - [ ] Deploy Google Dataproc on GKE (ref: [Dataproc on Google Kubernetes Engine](https://cloud.google.com/dataproc/docs/concepts/jobs/dataproc-gke))
+- [ ] Install `Hadoop` locally to test
+- [ ] Test `Hadoop` on GKE
