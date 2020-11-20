@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from pyspark import SparkContext
 import re
@@ -9,7 +10,7 @@ sc.setLogLevel("WARN")
 
 def getWordCountsList(sc, filePath):
     words = sc.textFile(filePath).flatMap(
-    lambda line: 
+    lambda line:
         # list(re.sub(r'[^\w]', '', line).lower())
         re.sub(r'[^\w]', ' ', line).lower().split()
     )
@@ -31,8 +32,8 @@ def outputFormat(words, wordsRange, categoryString, totalNum):
         word = words[rank][0]
         category = categoryString
         frequency = words[rank][1]
-        print(f"\t{rank}\t{word:20}\t{category:10}\t{frequency}")
-    print()
+        string = f"\t{rank}\t{word:20}\t{category:10}\t{frequency}\n"
+        sys.stdout.buffer.write(string.encode('utf-8'))
 
 def printBorder():
     print(f"\trank\t{'word':20}\tcategory\tfrequency")
