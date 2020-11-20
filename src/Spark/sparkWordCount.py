@@ -11,7 +11,6 @@ sc.setLogLevel("WARN")
 def getWordCountsList(sc, filePath):
     words = sc.textFile(filePath).flatMap(
     lambda line:
-        # list(re.sub(r'[^\w]', '', line).lower())
         re.sub(r'[^\w]', ' ', line).lower().split()
     )
     wordCounts = words.map(lambda word: (word, 1))\
