@@ -4,7 +4,7 @@ This is the course project folder of [M1522.006300 Distributed Systems](http://d
 
 ## Project Description
 
-The goal of this project is to deploy and manage a prototype cloud cluster running batch processing `WordLetterCount` applications. There are two `WordLetterCount` applications implemented in different ways: one used the `Spark` API, the other used `Hadoop` API and a self-designed resource scheduler.
+The goal of this project is to deploy and manage a prototype cloud cluster running batch processing `WordLetterCount` applications. There are two `WordLetterCount` applications implemented in different ways: one used the `Spark` API, the other used `WordCount` API and a self-designed resource scheduler.
 
 ## Developer Tutorials
 
@@ -18,6 +18,6 @@ Our project ID is `peaceful-fact-294309`, you can use the web-based dashboard [G
 
 ## To-Dos
 
-- [ ] Deploy Google Dataproc on GKE (ref: [Dataproc on Google Kubernetes Engine](https://cloud.google.com/dataproc/docs/concepts/jobs/dataproc-gke))
-- [ ] Install `Hadoop` locally to test
-- [ ] Test `Hadoop` on GKE
+- [x] Deploy Google Dataproc on GKE (ref: [Dataproc on Google Kubernetes Engine](https://cloud.google.com/dataproc/docs/concepts/jobs/dataproc-gke))
+- [x] Install `WordCount` locally to test
+- [ ] Test `WordCount` on GKE
