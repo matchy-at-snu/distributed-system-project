@@ -1,4 +1,4 @@
-package WordCount;
+package DSProject.WordCount;
 
 
 import org.apache.hadoop.io.IntWritable;

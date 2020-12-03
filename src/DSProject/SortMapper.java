@@ -1,4 +1,4 @@
-package LetterCount;
+package DSProject;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -6,7 +6,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
 
-public class LetterSortMapper
+public class SortMapper
         extends Mapper<Object, Text, IntWritable, Text> {
 
     @Override
