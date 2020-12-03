@@ -54,8 +54,9 @@ public class LetterCount {
         jobSort.setJarByClass(LetterCount.class);
         jobSort.setMapperClass(LetterSortMapper.class);
         jobSort.setReducerClass(LetterSortReducer.class);
-        jobSort.setOutputKeyClass(IntWritable.class);
-        jobSort.setOutputValueClass(Text.class);
+        jobSort.setSortComparatorClass(ReverseComparator.class);
+        jobSort.setMapOutputKeyClass(IntWritable.class);
+        jobSort.setMapOutputValueClass(Text.class);
         FileInputFormat.addInputPath(jobSort, intermediatePath);
         FileOutputFormat.setOutputPath(jobSort, new Path(otherArgs[otherArgs.length - 1]));
 
