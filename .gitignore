@@ -3,6 +3,10 @@
 .idea
 *.iml
 
+# Temporary output folder
+tmp
+output
+
 # Compiled class file
 *.class
 
