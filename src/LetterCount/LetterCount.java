@@ -1,19 +1,13 @@
 package LetterCount;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hdfs.HdfsConfiguration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
-
-import java.net.URI;
 
 public class LetterCount {
 
@@ -21,7 +15,7 @@ public class LetterCount {
         Configuration conf = new Configuration();
         conf.set("fs.hdfs.impl",org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl",org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        FileSystem hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
+//        FileSystem hdfs = FileSystem.get(URI.create("hdfs://<namenode-hostname>:<port>"), conf);
         // -Dproperty=value <- set things like this
         //System.setProperty("dfs.blocksize", "24");
 
@@ -60,10 +54,11 @@ public class LetterCount {
         jobSort.setJarByClass(LetterCount.class);
         jobSort.setMapperClass(LetterSortMapper.class);
         jobSort.setReducerClass(LetterSortReducer.class);
-        jobSort.setOutputKeyClass(Text.class);
-        jobSort.setOutputValueClass(IntWritable.class);
+        jobSort.setOutputKeyClass(IntWritable.class);
+        jobSort.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(jobSort, intermediatePath);
         FileOutputFormat.setOutputPath(jobSort, new Path(otherArgs[otherArgs.length - 1]));
+
         System.exit(jobSort.waitForCompletion(true) ? 0 : 1);
     }
 }
