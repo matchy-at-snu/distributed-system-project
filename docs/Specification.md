@@ -66,11 +66,19 @@ In this step, you should use a CLI interface to do following operations:
 
 ### Requirements
 
-Using the `Spark` APIs, develop an application that implements an extended version of the popular WordCount batch processing example. The application should count the number of occurrences of words and letters in the input document and categorize words/letters in three groups of popular, rare and common words/letters.
+Using the `Spark` APIs, develop an application that implements an extended version of the popular WordCount batch processing example. The application should count the number of occurrences of words and letters in the input document and categorize words/letters in three groups of **popular**, **rare** and **common** words/letters.
 
-A word/letter is popular when it is among the highest 5% of words when sorted by their number of occurrences (i.e., top 5% of the words with the maximum frequencies) in the data file. A word/letter is rare when it is ranked amongst the lowest 5% of words by their frequency (i.e., bottom 5% of the words with minimum frequencies). A word/letter is common when it can be ranked amongst the middle 5% of words, sorted in a descending order by their word frequency (i.e., ranked in range [47.5%-52.5%] of the list of words, sorted by descending order by the number of occurrences for each word).
+A word/letter is **popular** when it is among the highest 5% of words when sorted by their number of occurrences (i.e., **top 5%** of the words with the maximum frequencies) in the data file.
 
-Assume that your code takes as input a very large text file which will be available in our ETL webpage. You can write your code using `Python` or `Java`. You can directly submit your `Java-Spark` application to GCP `Kubernetes` cluster by using the `spark-submit` script. But, if you prefer to write your code in `Python`, then you need to containerize you `Python`/`Spark` application, by creating a (`Docker`) image, publishing the image to a registry, and finally pull the image and deploy your application to `Kubernetes`. (for `Spark` version 3.0.0, running `Spark` on `kubernetes` is possible.)
+A word/letter is **rare** when it is ranked amongst the **lowest 5%** of words by their frequency (i.e., bottom 5% of the words with minimum frequencies).
+
+A word/letter is **common** when it can be ranked amongst the **middle 5%** of words, sorted in a descending order by their word frequency (i.e., ranked in range **[47.5%-52.5%]** of the list of words, sorted by descending order by the number of occurrences for each word).
+
+Assume that your code takes as input a very large text file which will be available in our ETL webpage.
+
+You can write your code using `Python` or `Java`.
+
+You can directly submit your `Java-Spark` application to GCP `Kubernetes` cluster by using the `spark-submit` script. But, if you prefer to write your code in `Python`, then you need to containerize you `Python`/`Spark` application, by creating a (`Docker`) image, publishing the image to a registry, and finally pull the image and deploy your application to `Kubernetes`. (for `Spark` version 3.0.0, running `Spark` on `kubernetes` is possible.)
 
 CLI interface: Use CLI interface to run your `Spark` WordLetterCount against an input file.
 
@@ -101,22 +109,26 @@ The Tables need to look like below:
 
 ### Notes:
 
-- Words/letters must be in lowercase and in descending order by their frequency.
+- Words/letters must be in **lowercase** and in **descending order** by their frequency.
 - Identify words using punctuation marks.
-- In your analysis ignore all words/letters with non-letter characters.
+- In your analysis **ignore** all words/letters with **non-letter characters**.
 - The analysis for both words and letters should not be case sensitive.
-- Tables words and letters only store results relevant to words/letters which fall into the rare, popular and common categories. You can ignore the rest of the words/letters. The order of categories stored in the tables should be: first popular, then common and finally rare.
+- Tables words and letters only store results relevant to words/letters which fall into the **rare**, **popular** and **common** categories. You can ignore the rest of the words/letters. The order of categories stored in the tables should be: first popular, then common and finally rare.
 
 ## Step 3: Custom-built WordLetterCount on Cloud Cluster (for team_member A)
 
 ### Requirements
 
-Without using any `Spark` APIs develop your own implementation of the WordLetterCount application as described in Step 2. Run your code on the GCP `Kubernetes` cluster created in Step 1. ( You can also use `Hadoop` API if you are familiar with it)
+Without using any `Spark` APIs develop your own implementation of the WordLetterCount application as described in [Step 2](#step-2-spark-implementation-of-a-wordlettercount-application-on-kubernetes-and-gcp-for-team_member-b). Run your code on the GCP `Kubernetes` cluster created in [Step 1](#step-1-kubernetes-cluster-setup-for-team_member-a). ( You can also use `Hadoop` API if you are familiar with it)
 
-The implementation must include approaches for efficiently distributing and orchestrating containers and pods within cluster nodes. In particular, your code must be able to dynamically use less or more nodes (The dynamic addition/removal of containers/pods will be needed for Step 5. However, you could start your implementation without this feature). You must follow the `MapReduce` programming model (you are allowed to get inspiration from the Spark or other MapReduce implementations but you are not allowed to copy and paste any existing code). Your code should not implement any fault-tolerance features. You should only implement the following:
+The implementation must include **approaches for efficiently distributing and orchestrating containers and pods** within cluster nodes. In particular, your code must be able to dynamically use less or more nodes (The dynamic addition/removal of containers/pods will be needed for Step 5. However, you could start your implementation without this feature).
+
+You must follow the `MapReduce` programming model (you are allowed to get inspiration from the Spark or other MapReduce implementations but you are not allowed to copy and paste any existing code).
+
+Your code should not implement any fault-tolerance features. You should only implement the following:
 
 1. The `map()` and `reduce()` functions.
-2. The input file should be read in fixed sized chunks. The chunk size should be given as an input parameter. If this is omitted then your program should use a default value.
+2. The input file should be read in **fixed sized chunks**. The chunk size should be given as an input parameter. If this is omitted then your program should use a default value.
 3. Your code should implement all the necessary I/O operations for reading from the input file, sending intermediate values from the mappers to reducers, and finally writing the results to output files.
 
 CLI interface: Use the CLI interface to run your custom-built WordLetterCount against an input file:
@@ -127,7 +139,7 @@ CLI interface: Use the CLI interface to run your custom-built WordLetterCount ag
 
 Output: The output of your code should be similar or same as in the case of the Spark application. Below is the sample output (You do not need to do same).
 
-![Output Sample](img/Picture1.png)
+<img alt="Output Sample" width=80% src="img/Picture1.png">
 
 ## Step 4: Performance Experiments (for team_member B)
 
@@ -181,6 +193,8 @@ CLI interface: Use the CLI interface to run both schedulers against different in
 
 #### TIP: Kubernetes Scheduling Principles
 
+<img width=80% alt="Kubernetes Scheduling Principles" src="img/Picture2.png"/>
+
 When creating a Pod, you can assign it to a node by adding multiple conditions to the Pod's spec. In Kubernetes, a component named kube-scheduler determines the node to which the Pod will be assigned. kube-scheduler goes through a two-step process when selecting a node for a pod.
 
 1. Filtering: Finding suitable nodes for pods
@@ -200,7 +214,9 @@ You can find more information about the `kubernetes` scheduler at the following 
 
 #### TIP: Kubernetes custom-scheduler
 
-In most cases, you can perform the desired scheduling with only the kube-scheduler provided by default, but sometimes a separate scheduling algorithm is required. In this case, you can write the source code yourself, or you can implement the scheduler with just [a simple shell script](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes). The official Kubernetes documentation also explains examples of running multiple schedulers. However, when using a custom scheduler, you need to set spec.schedulerName when defining Pods. If you don't set this, the default scheduler is running.
+In most cases, you can perform the desired scheduling with only the kube-scheduler provided by default, but sometimes a separate scheduling algorithm is required. In this case, you can write the source code yourself, or you can implement the scheduler with just [a simple shell script](https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes). The official Kubernetes documentation also explains examples of running multiple schedulers. However, when using a custom scheduler, you need to set `spec.schedulerName` when defining Pods. If you don't set this, the default scheduler is running.
+
+<img width=40% alt="Setting custom scheduler " src="img/Picture3.png"/>
 
 You can get help writing a custom scheduler at the following websites.
 
