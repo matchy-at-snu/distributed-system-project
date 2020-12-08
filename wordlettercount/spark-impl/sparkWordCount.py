@@ -4,19 +4,34 @@ from pyspark import SparkContext
 import re
 from math import ceil
 import sys
-from operator import add
+from operator import add, le
 sc = SparkContext("local[*]", "word count")
 sc.setLogLevel("WARN")
 
+def wordSep(line):
+    filter1 = re.compile(r"[^\w\'-]|[\d_]", re.U)
+    line = re.sub(filter1, ' ', line)
+    filter2 = re.compile(r"\\b-|-\\b|-{2,}", re.U)
+    line = re.sub(filter2, ' ', line)
+    filter3 = re.compile(r"\\b\'|\'\\b|\'{2,}", re.U)
+    return re.sub(filter3, ' ', line).lower().split()
+
 def getWordCountsList(sc, filePath):
-    words = sc.textFile(filePath).flatMap(
-    lambda line:
-        re.sub(r'[^\w]', ' ', line).lower().split()
-    )
+    words = sc.textFile(filePath).flatMap(wordSep)
     wordCounts = words.map(lambda word: (word, 1))\
         .reduceByKey(add)\
         .sortBy(keyfunc=lambda x:x[1], ascending=False)
     return list(wordCounts.collect()), words.count()
+
+def getLetterCountsList(sc, filePath):
+    letters = sc.textFile(filePath).flatMap(
+        lambda line:
+            list(re.sub(r'[\W\d_]', '', line).lower())
+    )
+    letterCounts = letters.map(lambda letter: (letter, 1))\
+        .reduceByKey(add)\
+        .sortBy(keyfunc=lambda x:x[1], ascending=False)
+    return list(letterCounts.collect()), letters.count()
 
 def get3Ranges(wordCountSize):
     wordCountSize_5p = int(ceil(wordCountSize*0.05))
@@ -31,17 +46,27 @@ def outputFormat(words, wordsRange, categoryString, totalNum):
         word = words[rank][0]
         category = categoryString
         frequency = words[rank][1]
-        string = f"\t{rank}\t{word:20}\t{category:10}\t{frequency}\n"
-        sys.stdout.buffer.write(string.encode('utf-8'))
+        string = ("\t"+str(rank).ljust(10)+"\t"+word.ljust(20)+"\t"
+            +category.ljust(10)+"\t"+str(frequency).ljust(20))
+        print(string)
 
-def printBorder():
-    print(f"\trank\t{'word':20}\tcategory\tfrequency")
+def printBorder(type):
+    print(f"\t{'rank':10}\t{str(type):20}\t{'category':10}\tfrequency")
     print("\t----------------------------------------------------------")
 
 filePath = sys.argv[1]
-wordCountList, totalNum = getWordCountsList(sc, filePath)
+wordCountList, wordNum = getWordCountsList(sc, filePath)
 popularWordsRange, commonWordsRange, rareWordsRange = get3Ranges(len(wordCountList))
-printBorder()
-outputFormat(wordCountList, popularWordsRange, "popular", totalNum)
-outputFormat(wordCountList, commonWordsRange, "common", totalNum)
-outputFormat(wordCountList, rareWordsRange, "rare", totalNum)
+printBorder("word")
+outputFormat(wordCountList, popularWordsRange, "popular", wordNum)
+outputFormat(wordCountList, commonWordsRange, "common", wordNum)
+outputFormat(wordCountList, rareWordsRange, "rare", wordNum)
+
+print("\n\n")
+
+letterCountsList, letterNum = getLetterCountsList(sc, filePath)
+popularLetterRange, commonLetterRange, rareLetterRange = get3Ranges(len(letterCountsList))
+printBorder("letter")
+outputFormat(letterCountsList, popularLetterRange, "popular", letterNum)
+outputFormat(letterCountsList, commonLetterRange, "common", letterNum)
+outputFormat(letterCountsList, rareLetterRange, "rare", letterNum)
