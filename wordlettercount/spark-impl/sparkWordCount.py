@@ -5,6 +5,11 @@ import re
 from math import ceil
 import sys
 from operator import add, le
+
+# borrowed randomly from internet, for printing non-ascii character
+import codecs
+sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
+
 sc = SparkContext("local[*]", "word count")
 sc.setLogLevel("WARN")
 
@@ -47,8 +52,8 @@ def outputFormat(words, wordsRange, categoryString, totalNum):
         category = categoryString
         frequency = words[rank][1]
         string = ("\t"+str(rank).ljust(10)+"\t"+word.ljust(20)+"\t"
-            +category.ljust(10)+"\t"+str(frequency).ljust(20))
-        print(string)
+            +category.ljust(10)+"\t"+str(frequency).ljust(20)+"\n")
+        sys.stdout.write(string)
 
 def printBorder(type):
     print(f"\t{'rank':10}\t{str(type):20}\t{'category':10}\tfrequency")

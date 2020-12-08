@@ -17,28 +17,31 @@ create:
         --gke-cluster=gke \
         --region=asia-northeast3 \
         --image-version=1.4.27-beta \
-        --bucket=matchy-bucket \
-        --project $(gcloud config get-value project)
+        --bucket=matchy-bucket 
 
 reboot:
 	gcloud container clusters resize gke --num-nodes 1 \
-        --region asia-northeast3 \
-        --project $(gcloud config get-value project)
+        --region asia-northeast3 
+
 	gcloud beta dataproc clusters create dataproc \
         --gke-cluster=gke \
         --region=asia-northeast3 \
         --image-version=1.4.27-beta \
-        --bucket=matchy-bucket \
-        --project $(gcloud config get-value project)
+        --bucket=matchy-bucket 
 
 shutdown:
-	gcloud beta dataproc clusters delete dataproc --region asia-northeast3 \
-        --project $(gcloud config get-value project)
-	gcloud container clusters resize gke --num-nodes 0 --region asia-northeast3\
-        --project $(gcloud config get-value project)
+	gcloud beta dataproc clusters delete dataproc --region asia-northeast3 
+	gcloud container clusters resize gke --num-nodes 0 --region asia-northeast3
 
 delete:
-	gcloud dataproc clusters delete dataproc --region asia-northeast3 \
-        --project $(gcloud config get-value project)
-	gcloud container clusters resize gke --num-nodes 0 --region asia-northeast3\
-        --project $(gcloud config get-value project)
+	gcloud dataproc clusters delete dataproc --region asia-northeast3 
+	gcloud container clusters resize gke --num-nodes 0 --region asia-northeast3
+
+ls:
+	gsutil ls gs://matchy-bucket/inputs/
+
+file=input1
+submit_spark:
+	gcloud dataproc jobs submit pyspark \
+        ./wordlettercount/spark-impl/sparkWordCount.py --cluster=dataproc \
+        -- gs://matchy-bucket/inputs/$(file)
