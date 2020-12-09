@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reducers
+  namespace: wordlettercount
+  labels:
+    app: reducers
+spec:
+  ports:
+    - port: 8080
+      name: reducers
+  clusterIP: None
+  selector:
+    app: reducers
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reducers
+  namespace: wordlettercount
+spec:
+  serviceName: "reducers"
+  replicas: 0
+  selector:
+    matchLabels:
+      app: reducers
+  template:
+    metadata:
+      labels:
+        app: reducers
+    spec:
+      containers:
+        - name: reducer
+          image: matchy233/reducer:v0.0.1
+          ports:
+            - containerPort: 8080
+              name: reducer

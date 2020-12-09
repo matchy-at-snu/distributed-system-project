@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mapper-wordcount
+  namespace: wordlettercount
+  labels:
+    app: mapper-wordcount
+spec:
+  ports:
+    - port: 8080
+      name: mapper-wordcount
+  clusterIP: None
+  selector:
+    app: mapper-wordcount
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mapper-wordcount
+  namespace: wordlettercount
+spec:
+  serviceName: "mapper-wordcount"
+  replicas: 0
+  selector:
+    matchLabels:
+      app: mapper-wordcount
+  template:
+    metadata:
+      labels:
+        app: mapper-wordcount
+    spec:
+      containers:
+        - name: mapper-wordcount
+          image: matchy233/mapper-wordcount:v0.0.1
+          ports:
+            - containerPort: 8080
+              name: mapper-wordcount
