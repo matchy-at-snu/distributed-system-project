@@ -64,7 +64,7 @@ func main() {
 
 	// 创建用于部署的 deploymentsClient ，可以指定命名空间（以字符串形式喂入）
 	log.Println("Create stateful")
-	statefulSetClient := clientset.AppsV1beta2().StatefulSets("wordlettercount")
+	statefulSetClient := clientset.AppsV1().StatefulSets("wordlettercount")
 
 	input := *inputStrPtr
 	output := *outputStrPtr
@@ -88,7 +88,7 @@ func main() {
 		log.Println("Get the latest version of Statefulset...")
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"app: mapper-wordcount",
+			"mapper-wordcount",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
@@ -96,7 +96,7 @@ func main() {
 
 		*result.Spec.Replicas = int32(len(chunks))
 		log.Printf("Set replicas to : %v\n", *(result.Spec.Replicas))
-		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		_, updateErr := statefulSetClient.UpdateStatus(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if retryErr != nil {
@@ -104,6 +104,7 @@ func main() {
 	}
 
 	for {
+		time.Sleep(10 * time.Second)
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
 			"mapper-wordcount",
@@ -326,7 +327,7 @@ func main() {
 	if *outputStrPtr == "" {
 		log.Println("Use std out")
 	} else {
-		log.Println("Use output path")
+		log.Printf("Use output path to print output! Check it at gs://%s\n", output)
 		if err := uploadFile(output, kvp.String()); err != nil {
 			log.Fatal(err)
 		}
