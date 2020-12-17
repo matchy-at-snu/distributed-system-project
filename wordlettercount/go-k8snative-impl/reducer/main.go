@@ -11,8 +11,9 @@ func main() {
 	e := echo.New()
 
 	e.GET("/reduce", func(c echo.Context) error {
-		body := c.QueryParam("body")
+		e.Logger.Info("I got the input!")
 
+		body := c.QueryParam("body")
 		buf := bytes.NewBuffer([]byte(body))
 
 		var reduceData = map[string][]int{}
@@ -21,6 +22,18 @@ func main() {
 		_ = decoder.Decode(&reduceData)
 
 		var reducing = map[string]int{}
+
+		for key, value := range reduceData {
+			reducing[key] = 0
+			for _, count := range value {
+				reducing[key] += count
+			}
+		}
+
+		for k, v := range reducing {
+			e.Logger.Info("I got the output! Check first result: ", k, ": ", v)
+			break;
+		}
 
 		buf = new(bytes.Buffer)
 		encoder := gob.NewEncoder(buf)

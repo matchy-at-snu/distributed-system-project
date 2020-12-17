@@ -83,14 +83,14 @@ func main() {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"mappers",
+			"mapper-wordcount",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 		}
 
-		result.Spec.Replicas = int32Ptr(int32(len(chunks)))
-		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		*result.Spec.Replicas = int32(len(chunks))
+		_, updateErr := statefulSetClient.UpdateStatus(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if retryErr != nil {
@@ -100,7 +100,7 @@ func main() {
 	for {
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"mappers",
+			"mapper-wordcount",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
@@ -115,13 +115,13 @@ func main() {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			result, getErr := statefulSetClient.Get(
 				context.TODO(),
-				"mappers",
+				"mapper-wordcount",
 				metav1.GetOptions{})
 			if getErr != nil {
 				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 			}
 
-			result.Spec.Replicas = int32Ptr(0)
+			*result.Spec.Replicas = 0
 			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 			return updateErr
 		})
@@ -140,8 +140,8 @@ func main() {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 		}
 
-		result.Spec.Replicas = int32Ptr(int32(5))
-		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		*result.Spec.Replicas = int32(5)
+		_, updateErr := statefulSetClient.UpdateStatus(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if retryErr != nil {
@@ -159,7 +159,7 @@ func main() {
 				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 			}
 
-			result.Spec.Replicas = int32Ptr(0)
+			*result.Spec.Replicas = 0
 			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 			return updateErr
 		})

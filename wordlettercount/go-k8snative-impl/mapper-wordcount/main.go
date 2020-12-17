@@ -13,6 +13,8 @@ func main() {
 	e := echo.New()
 
 	e.GET("/map", func(c echo.Context) error {
+		e.Logger.Info("I got the input!")
+
 		str := c.QueryParam("str")
 
 		lines := strings.Split(str, "\n")
@@ -30,6 +32,12 @@ func main() {
 				wordCountMap[word] += 1
 			}
 		}
+
+		for k, v := range wordCountMap {
+			e.Logger.Info("I got the output! Check first result: ", k, ": ", v)
+			break;
+		}
+
 
 		buf := new(bytes.Buffer)
 		encoder := gob.NewEncoder(buf)

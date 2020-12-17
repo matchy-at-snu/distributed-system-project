@@ -38,7 +38,7 @@ func main() {
 	outputStrPtr := flag.String("output", "",
 		"The output directory in the form of /path/to/output, default to stdout")
 	chunkSizePtr := flag.Int("chunkSize", 1024,
-		"The maximum chunk size (in KB) which will be fed to the mapper-wordcount, default to 1024KB")
+		"The maximum chunk size (in KB) which will be fed to the wc-mapper, default to 1024KB")
 
 	flag.Parse()
 
@@ -88,15 +88,15 @@ func main() {
 		log.Println("Get the latest version of Statefulset...")
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"mapper-wordcount",
+			"wc-mapper",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 		}
 
-		*result.Spec.Replicas = int32(len(chunks))
-		log.Printf("Set replicas to : %v\n", *(result.Spec.Replicas))
-		_, updateErr := statefulSetClient.UpdateStatus(context.TODO(), result, metav1.UpdateOptions{})
+		result.Spec.Replicas = int32Ptr(int32(len(chunks)))
+		log.Printf("Set mapper replicas to : %v\n", *(result.Spec.Replicas))
+		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
 	if retryErr != nil {
@@ -104,32 +104,32 @@ func main() {
 	}
 
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(5 * time.Second)
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"mapper-wordcount",
+			"wc-mapper",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 		}
-		log.Printf("Updating: expect %v, have %v\n", *result.Spec.Replicas, result.Status.Replicas)
-		if *result.Spec.Replicas == result.Status.Replicas {
+		log.Printf("Updating mappers: expect %v, have %v\n", *result.Spec.Replicas, result.Status.ReadyReplicas)
+		if *result.Spec.Replicas == result.Status.ReadyReplicas {
 			break
 		}
 	}
 
-	// Delete mapper-wordcount deployment deletion
+	// Delete wc-mapper deployment deletion
 	defer func() {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			result, getErr := statefulSetClient.Get(
 				context.TODO(),
-				"mapper-wordcount",
+				"wc-mapper",
 				metav1.GetOptions{})
 			if getErr != nil {
 				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 			}
 
-			*result.Spec.Replicas = 0
+			result.Spec.Replicas = int32Ptr(0)
 			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 			return updateErr
 		})
@@ -149,7 +149,8 @@ func main() {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 		}
 
-		*result.Spec.Replicas = 4
+		result.Spec.Replicas = int32Ptr(5)
+		log.Printf("Set reducer replicas to : %v\n", *(result.Spec.Replicas))
 		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 		return updateErr
 	})
@@ -168,7 +169,7 @@ func main() {
 				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
 			}
 
-			*result.Spec.Replicas = 0
+			result.Spec.Replicas = int32Ptr(0)
 			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
 			return updateErr
 		})
@@ -208,7 +209,7 @@ func main() {
 		go func(host string, chunk string) {
 			defer wgm.Done()
 			req, _ := http.NewRequest("GET", fmt.Sprintf(
-				"http://%s:%s/mp", host, os.Getenv("MAPPER_PORT")), nil)
+				"http://%s:%s/map", host, os.Getenv("MAPPER_PORT")), nil)
 
 			q := req.URL.Query()
 			q.Add("str", chunk)
@@ -243,11 +244,28 @@ func main() {
 
 	log.Println("Shuffling finished!")
 
+	// It opens really slow, hahah
+
+	for {
+		time.Sleep(1 * time.Second)
+		result, getErr := statefulSetClient.Get(
+			context.TODO(),
+			"reducers",
+			metav1.GetOptions{})
+		if getErr != nil {
+			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+		}
+		log.Printf("Updating reducers: expect %v, have %v\n", *result.Spec.Replicas, result.Status.ReadyReplicas)
+		if *result.Spec.Replicas == result.Status.ReadyReplicas {
+			break
+		}
+	}
+
 	// Send to reducer
 	reducerHost := os.Getenv("REDUCER_HOST")
 
 	reducerIPs, err := net.LookupIP(reducerHost)
-	if len(reducerIPs) != 4 {
+	if len(reducerIPs) != 5 {
 		log.Fatal("Some reducers didn't start normally")
 	}
 	if err != nil {
@@ -280,7 +298,7 @@ func main() {
 	log.Println("Start reducing...")
 
 	var wgr sync.WaitGroup
-	wgr.Add(4)
+	wgr.Add(5)
 
 	// IP : {word: count}
 	var reduceResult = map[string]map[string]int{}
