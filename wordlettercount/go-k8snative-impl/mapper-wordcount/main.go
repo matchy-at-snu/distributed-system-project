@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/middleware"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 )
 
@@ -28,30 +29,25 @@ func main() {
 
 		str := string(b)
 
-		e.Logger.Print(str[:100]) // debug string, to be commented out!
-
 		lines := strings.Split(str, "\n")
 
 		mapping := map[string]int{}
 
 		// FIXME: regex not working
-		//var reNoChar = regexp.MustCompile("[^\\p{Greek}-]")
-		//var reEmDash = regexp.MustCompile("--+")
+		var reNoChar = regexp.MustCompile("[^\\p{Greek}\\w-]")
+		var reEmDash = regexp.MustCompile("--+")
 
 		for _, line := range lines {
-			//s := reEmDash.ReplaceAllString(
-			//	reNoChar.ReplaceAllString(line, ""), "")
-			words := strings.Split(line, " ")
+			s := reEmDash.ReplaceAllString(
+				reNoChar.ReplaceAllString(line, " "), " ")
+			words := strings.Split(s, " ")
 			for _, word := range words {
-				if _, prs := mapping[word]; prs {
+				if word != "" {
 					mapping[word] += 1
-				} else {
-					mapping[word] = 1
 				}
 			}
 		}
 
-		e.Logger.Print("I got the output! Check first 5 result: ")
 		var count = 0
 		for k, v := range mapping {
 			e.Logger.Print(k, ": ", v)
