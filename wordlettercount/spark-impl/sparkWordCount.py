@@ -10,6 +10,9 @@ from operator import add, le
 import codecs
 sys.stdout = codecs.getwriter("utf-8")(sys.stdout.detach())
 
+import time
+startTime = time.time()
+
 sc = SparkContext("local[*]", "word count")
 sc.setLogLevel("WARN")
 
@@ -75,3 +78,6 @@ printBorder("letter")
 outputFormat(letterCountsList, popularLetterRange, "popular", letterNum)
 outputFormat(letterCountsList, commonLetterRange, "common", letterNum)
 outputFormat(letterCountsList, rareLetterRange, "rare", letterNum)
+
+finishTime = time.time()
+print("execution time: %s seconds" %(finishTime-startTime))
