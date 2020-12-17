@@ -13,11 +13,7 @@ func main() {
 	e.Use(middleware.BodyLimit("10MB"))
 
 	e.POST("/reduce", func(c echo.Context) error {
-		e.Logger.Print("I got the input!")
 
-		//if bindErr := c.Bind(&body); bindErr != nil {
-		//	e.Logger.Fatal(bindErr)
-		//}
 		body, err := ioutil.ReadAll(c.Request().Body)
 		if err != nil {
 			e.Logger.Fatal(err)
@@ -30,8 +26,6 @@ func main() {
 			e.Logger.Fatal("decode error:", decError)
 		}
 
-		e.Logger.Print(reduceData)
-
 		var reducing = map[string]int{}
 
 		for key, value := range reduceData {
@@ -41,24 +35,11 @@ func main() {
 			}
 		}
 
-		for k, v := range reducing {
-			e.Logger.Print("I got the output! Check first result: ", k, ": ", v)
-			break
-		}
-
-		//buf = new(bytes.Buffer)
-		//encoder := gob.NewEncoder(buf)
-		//_ = encoder.Encode(reducing)
-		//
-		//return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
 		data, encErr := json.Marshal(reducing)
 		if encErr != nil {
 			e.Logger.Fatal(encErr)
 		}
-		//c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
-		//c.Response().WriteHeader(http.StatusOK)
 
-		//return json.NewEncoder(c.Response()).Encode(mapping)
 		return c.JSONBlob(http.StatusOK, data)
 	})
 

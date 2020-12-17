@@ -91,6 +91,26 @@ func main() {
 		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
 	}
 
+	// Open reducers
+	log.Println("Create reducers...")
+	retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		result, getErr := statefulSetClient.Get(
+			context.TODO(),
+			"reducers",
+			metav1.GetOptions{})
+		if getErr != nil {
+			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+		}
+
+		result.Spec.Replicas = int32Ptr(5)
+		log.Printf("Set reducer replicas to : %v\n", *(result.Spec.Replicas))
+		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+		return updateErr
+	})
+	if retryErr != nil {
+		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
+	}
+
 	for {
 		time.Sleep(5 * time.Second)
 		result, getErr := statefulSetClient.Get(
@@ -125,26 +145,6 @@ func main() {
 			log.Fatal(fmt.Errorf("Update failed %v", retryErr))
 		}
 	}()
-
-	// Open reducers
-	log.Println("Create reducers...")
-	retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		result, getErr := statefulSetClient.Get(
-			context.TODO(),
-			"reducers",
-			metav1.GetOptions{})
-		if getErr != nil {
-			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
-		}
-
-		result.Spec.Replicas = int32Ptr(5)
-		log.Printf("Set reducer replicas to : %v\n", *(result.Spec.Replicas))
-		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-		return updateErr
-	})
-	if retryErr != nil {
-		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
-	}
 
 	// Delete reducer deployment deletion
 	defer func() {

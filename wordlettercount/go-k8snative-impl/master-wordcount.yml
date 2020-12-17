@@ -22,7 +22,7 @@ spec:
   serviceAccountName: ksa
   containers:
     - name: wc-master
-      image: matchy233/master-wordcount:v0.2.6
+      image: matchy233/master-wordcount:v1.0.0
       ports:
         - containerPort: 8080
           name: mapper
