@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: wc-mapper
-          image: matchy233/mapper-wordcount:v0.0.15
+          image: matchy233/mapper-wordcount:v0.0.18
           ports:
             - containerPort: 8080
               name: wc-mapper

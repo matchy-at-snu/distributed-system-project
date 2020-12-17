@@ -15,10 +15,6 @@ func main() {
 	e.Use(middleware.BodyLimit("10MB"))
 
 	e.POST("/map", func(c echo.Context) error {
-		//var str string
-		//if bindErr := c.Bind(&str); bindErr != nil {
-		//	e.Logger.Fatal(bindErr)
-		//}
 		var (
 			b   []byte
 			err error
@@ -35,7 +31,7 @@ func main() {
 
 		// FIXME: regex not working
 		var reNoChar = regexp.MustCompile("[^\\p{Greek}\\w-]")
-		var reEmDash = regexp.MustCompile("--+")
+		var reEmDash = regexp.MustCompile("--+|[0-9]|_")
 
 		for _, line := range lines {
 			s := reEmDash.ReplaceAllString(
@@ -43,17 +39,8 @@ func main() {
 			words := strings.Split(s, " ")
 			for _, word := range words {
 				if word != "" {
-					mapping[word] += 1
+					mapping[strings.ToLower(strings.Trim(word, "-"))] += 1
 				}
-			}
-		}
-
-		var count = 0
-		for k, v := range mapping {
-			e.Logger.Print(k, ": ", v)
-			count++
-			if count >= 5 {
-				break
 			}
 		}
 
