@@ -10,17 +10,21 @@ import (
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10M"))
+	e.Use(middleware.BodyLimit("10GB"))
 
-	e.GET("/map", func(c echo.Context) error {
-		str := c.QueryParam("str")
+	e.POST("/map", func(c echo.Context) error {
+		var str string
+		if bindErr := c.Bind(&str); bindErr != nil {
+			e.Logger.Fatal(bindErr)
+		}
 
-		e.Logger.Print(str)
+		e.Logger.Print(str[:100]) // debug string, to be commented out!
 
 		lines := strings.Split(str, "\n")
 
 		mapping := map[string]int{}
 
+		// FIXME: regex not working
 		//var reNoChar = regexp.MustCompile("[^\\p{Greek}-]")
 		//var reEmDash = regexp.MustCompile("--+")
 
@@ -51,10 +55,7 @@ func main() {
 		if encErr != nil {
 			e.Logger.Fatal(encErr)
 		}
-		//c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
-		//c.Response().WriteHeader(http.StatusOK)
 
-		//return json.NewEncoder(c.Response()).Encode(mapping)
 		return c.JSONBlob(http.StatusOK, data)
 	})
 

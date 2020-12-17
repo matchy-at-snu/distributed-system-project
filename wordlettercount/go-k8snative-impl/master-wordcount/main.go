@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"cloud.google.com/go/storage"
 	"encoding/json"
 	"flag"
@@ -180,7 +181,6 @@ func main() {
 
 	// when they are ready send GET to them to retrieve message
 	// {IP : {word : count}}
-	var client = &http.Client{}
 
 	mapperHost := os.Getenv("MAPPER_HOST")
 	mapperIPs, err := net.LookupIP(mapperHost)
@@ -208,20 +208,26 @@ func main() {
 	for host, chunk := range mapIPChunk {
 		go func(host string, chunk string) {
 			defer wgm.Done()
-			req, _ := http.NewRequest("GET", fmt.Sprintf(
-				"http://%s:%s/map", host, os.Getenv("MAPPER_PORT")), nil)
-
-			q := req.URL.Query()
-			q.Add("str", chunk)
-			req.URL.RawQuery = q.Encode()
+			//req, _ := http.NewRequest("POST", fmt.Sprintf(
+			//	"http://%s:%s/map", host, os.Getenv("MAPPER_PORT")), nil)
+			//
+			//q := req.URL.Query()
+			//q.Add("str", chunk)
+			//req.URL.RawQuery = q.Encode()
+			//http.Post()
 
 			var (
 				res     *http.Response
-				retries int = 3
+				retries = 3
 				reqErr  error
 			)
 			for retries > 0 {
-				res, reqErr = client.Do(req)
+				res, reqErr = http.Post(
+					fmt.Sprintf("http://%s:%s/map",
+						host, os.Getenv("MAPPER_PORT")),
+					"text/plain",
+					strings.NewReader(chunk),
+				)
 				if reqErr != nil {
 					log.Println(reqErr)
 					retries -= 1
@@ -230,7 +236,7 @@ func main() {
 				}
 			}
 
-			if res != nil {
+			if res.StatusCode == http.StatusOK {
 				defer res.Body.Close()
 
 				//
@@ -241,11 +247,14 @@ func main() {
 				//
 				//buf := bytes.NewBuffer(body)
 				//
-				var decodedMap map[string]int
-				decError := json.NewDecoder(res.Body).Decode(&decodedMap)
-				if decError != nil {
-					log.Fatal("decode error: ", decError)
-				}
+				//var decodedMap map[string]int
+
+				data, _ := ioutil.ReadAll(res.Body)
+				log.Fatal(string(data))
+				//decError := json.NewDecoder(res.Body).Decode(&decodedMap)
+				//if decError != nil {
+				//	log.Fatal("decode error: ", decError)
+				//}
 
 				//
 				//decoder := gob.NewDecoder(buf)
@@ -254,9 +263,9 @@ func main() {
 				//	log.Fatal("decode error:", decodeErr)
 				//}
 
-				mapResult[host] = decodedMap
+				//mapResult[host] = decodedMap
 			} else {
-				log.Fatal("Didn't get anything, WTF?")
+				log.Fatal("Status code looks bad! ", res.Status)
 			}
 
 		}(host, chunk)
@@ -349,8 +358,8 @@ func main() {
 	for host, words := range mapIPWords {
 		go func(host string, words map[string][]int) {
 			defer wgr.Done()
-			req, _ := http.NewRequest("GET", fmt.Sprintf(
-				"http://%s:%s/reduce", host, os.Getenv("REDUCER_PORT")), nil)
+			//req, _ := http.NewRequest("GET", fmt.Sprintf(
+			//	"http://%s:%s/reduce", host, os.Getenv("REDUCER_PORT")), nil)
 			//buf := new(bytes.Buffer)
 
 			//encoder := gob.NewEncoder(buf)
@@ -360,12 +369,17 @@ func main() {
 			if encError != nil {
 				log.Fatal("encode error:", encError)
 			}
+			//
+			//q := req.URL.Query()
+			//q.Add("body", string(b))
+			//req.URL.RawQuery = q.Encode()
 
-			q := req.URL.Query()
-			q.Add("body", string(b))
-			req.URL.RawQuery = q.Encode()
-
-			res, reqError := client.Do(req)
+			res, reqError := http.Post(
+				fmt.Sprintf("http://%s:%s/reduce",
+					host, os.Getenv("REDUCER_PORT")),
+				"text/plain",
+				bytes.NewReader(b),
+			)
 			if reqError != nil {
 				log.Fatal("reducer http request error: ", reqError)
 			}

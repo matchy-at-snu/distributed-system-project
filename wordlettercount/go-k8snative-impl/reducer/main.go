@@ -9,19 +9,23 @@ import (
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10M"))
+	e.Use(middleware.BodyLimit("10GB"))
 
-	e.GET("/reduce", func(c echo.Context) error {
+	e.POST("/reduce", func(c echo.Context) error {
 		e.Logger.Print("I got the input!")
 
-		body := c.QueryParam("body")
+		var body []byte
+
+		if bindErr := c.Bind(&body); bindErr != nil {
+			e.Logger.Fatal(bindErr)
+		}
 		//buf := bytes.NewBuffer([]byte(body))
 
 		var reduceData = map[string][]int{}
 
 		//decoder := gob.NewDecoder(buf)
 		//_ = decoder.Decode(&reduceData)
-		decError := json.Unmarshal([]byte(body), &reduceData)
+		decError := json.Unmarshal(body, &reduceData)
 		if decError != nil {
 			e.Logger.Fatal("decode error:", decError)
 		}
