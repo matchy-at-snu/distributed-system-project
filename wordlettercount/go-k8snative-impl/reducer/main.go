@@ -45,9 +45,15 @@ func main() {
 		//_ = encoder.Encode(reducing)
 		//
 		//return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
-		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
-		c.Response().WriteHeader(http.StatusOK)
-		return json.NewEncoder(c.Response()).Encode(reducing)
+		data, encErr := json.Marshal(reducing)
+		if encErr != nil {
+			e.Logger.Fatal(encErr)
+		}
+		//c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+		//c.Response().WriteHeader(http.StatusOK)
+
+		//return json.NewEncoder(c.Response()).Encode(mapping)
+		return c.JSONBlob(http.StatusOK, data)
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))
