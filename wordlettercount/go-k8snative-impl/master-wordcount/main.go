@@ -179,7 +179,6 @@ func main() {
 	//	}
 	//}()
 
-	// when they are ready send GET to them to retrieve message
 	// {IP : {word : count}}
 
 	mapperHost := os.Getenv("MAPPER_HOST")
@@ -208,13 +207,6 @@ func main() {
 	for host, chunk := range mapIPChunk {
 		go func(host string, chunk string) {
 			defer wgm.Done()
-			//req, _ := http.NewRequest("POST", fmt.Sprintf(
-			//	"http://%s:%s/map", host, os.Getenv("MAPPER_PORT")), nil)
-			//
-			//q := req.URL.Query()
-			//q.Add("str", chunk)
-			//req.URL.RawQuery = q.Encode()
-			//http.Post()
 
 			var (
 				res     *http.Response
@@ -239,31 +231,14 @@ func main() {
 			if res.StatusCode == http.StatusOK {
 				defer res.Body.Close()
 
-				//
-				//body, readErr := ioutil.ReadAll(res.Body)
-				//if readErr != nil {
-				//	log.Fatal(readErr)
-				//}
-				//
-				//buf := bytes.NewBuffer(body)
-				//
-				//var decodedMap map[string]int
+				var decodedMap map[string]int
 
-				data, _ := ioutil.ReadAll(res.Body)
-				log.Fatal(string(data))
-				//decError := json.NewDecoder(res.Body).Decode(&decodedMap)
-				//if decError != nil {
-				//	log.Fatal("decode error: ", decError)
-				//}
+				decError := json.NewDecoder(res.Body).Decode(&decodedMap)
+				if decError != nil {
+					log.Fatal("decode error: ", decError)
+				}
 
-				//
-				//decoder := gob.NewDecoder(buf)
-				//decodeErr := decoder.Decode(&decodeMap)
-				//if decodeErr != nil {
-				//	log.Fatal("decode error:", decodeErr)
-				//}
-
-				//mapResult[host] = decodedMap
+				mapResult[host] = decodedMap
 			} else {
 				log.Fatal("Status code looks bad! ", res.Status)
 			}
@@ -274,15 +249,6 @@ func main() {
 	wgm.Wait()
 
 	log.Println("Mapping finished!")
-
-	for ip, host := range mapResult {
-		log.Println(ip)
-		for word, count := range host {
-			log.Println(word, count)
-			break
-		}
-		break
-	}
 
 	log.Println("Start shuffling...")
 
@@ -296,8 +262,7 @@ func main() {
 
 	log.Println("Shuffling finished!")
 
-	// It opens really slow, hahah
-
+	// It opens really slow, so still, we have to wait here
 	for {
 		time.Sleep(1 * time.Second)
 		result, getErr := statefulSetClient.Get(
@@ -329,18 +294,17 @@ func main() {
 		words = append(words, word)
 	}
 
-	reduceChunkSize := int(math.Ceil(float64(len(words)) / 5.0))
+	reduceChunkSize := int(math.Ceil(float64(len(words)) / float64(len(reducerIPs))))
 
 	// { IP : {words : [count, count, count, ... ]}}
-	mapIPWords := map[string]map[string][]int{}
+	mapIPWords := make(map[string]map[string][]int)
 
 	for idx, reducerIP := range reducerIPs {
-		if idx*reduceChunkSize >= len(words) {
+		var start = idx * reduceChunkSize
+		if start >= len(words) {
 			break
 		}
-		var start = idx * reduceChunkSize
-		reduceWords := words[start:min(start, len(words))]
-
+		reduceWords := words[start:min(start+reduceChunkSize, len(words))]
 		mapIPWords[reducerIP.String()] = map[string][]int{}
 		for _, reduceKey := range reduceWords {
 			mapIPWords[reducerIP.String()][reduceKey] = shuffleResult[reduceKey]
@@ -358,21 +322,11 @@ func main() {
 	for host, words := range mapIPWords {
 		go func(host string, words map[string][]int) {
 			defer wgr.Done()
-			//req, _ := http.NewRequest("GET", fmt.Sprintf(
-			//	"http://%s:%s/reduce", host, os.Getenv("REDUCER_PORT")), nil)
-			//buf := new(bytes.Buffer)
-
-			//encoder := gob.NewEncoder(buf)
-			//_ = encoder.Encode(words)
 
 			b, encError := json.Marshal(words)
 			if encError != nil {
 				log.Fatal("encode error:", encError)
 			}
-			//
-			//q := req.URL.Query()
-			//q.Add("body", string(b))
-			//req.URL.RawQuery = q.Encode()
 
 			res, reqError := http.Post(
 				fmt.Sprintf("http://%s:%s/reduce",
@@ -383,19 +337,12 @@ func main() {
 			if reqError != nil {
 				log.Fatal("reducer http request error: ", reqError)
 			}
-			//body, _ := ioutil.ReadAll(res.Body)
-			//_ = res.Body.Close()
-			//
-			//b = bytes.NewBuffer(body)
 
 			var decodedReduce = map[string]int{}
 			decError := json.NewDecoder(res.Body).Decode(&decodedReduce)
 			if decError != nil {
 				log.Fatal(decError)
 			}
-
-			//decoder := gob.NewDecoder(buf)
-			//_ = decoder.Decode(&decodedReduce)
 
 			reduceResult[host] = decodedReduce
 		}(host, words)
@@ -454,17 +401,17 @@ func (p kvList) String() string {
 	table.SetHeader([]string{"CATEGORY", "RANK", "WORD", "FREQUENCY"})
 	for i, e := range popular {
 		table.Append([]string{
-			"POPULAR", strconv.Itoa(i), e.Key, string(rune(e.Value)),
+			"POPULAR", strconv.Itoa(i), e.Key, strconv.Itoa(e.Value),
 		})
 	}
 	for i, e := range common {
 		table.Append([]string{
-			"COMMON", string(rune(i + n/2 - perc5lim)), e.Key, string(rune(e.Value)),
+			"COMMON", strconv.Itoa(i + n/2 - perc5lim), e.Key, strconv.Itoa(e.Value),
 		})
 	}
 	for i, e := range rare {
 		table.Append([]string{
-			"RARE", string(rune(n - perc5lim + i)), e.Key, string(rune(e.Value)),
+			"RARE", strconv.Itoa(n - perc5lim + i), e.Key, strconv.Itoa(e.Value),
 		})
 	}
 

@@ -22,7 +22,7 @@ spec:
   serviceAccountName: ksa
   containers:
     - name: wc-master
-      image: matchy233/master-wordcount:v0.1.18
+      image: matchy233/master-wordcount:v0.2.6
       ports:
         - containerPort: 8080
           name: mapper
@@ -36,3 +36,4 @@ spec:
         - name: REDUCER_PORT
           value: "8080"
       args: ["-input=inputs/input1", "-output=outputs/output2"]
+  restartPolicy: Never
