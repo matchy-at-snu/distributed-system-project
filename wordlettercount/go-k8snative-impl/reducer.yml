@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: reducer
-          image: matchy233/reducer:v0.0.13
+          image: matchy233/reducer:v0.0.14
           ports:
             - containerPort: 8080
               name: reducer

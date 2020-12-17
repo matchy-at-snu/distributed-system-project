@@ -4,27 +4,27 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"io/ioutil"
 	"net/http"
 )
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10GB"))
+	e.Use(middleware.BodyLimit("10MB"))
 
 	e.POST("/reduce", func(c echo.Context) error {
 		e.Logger.Print("I got the input!")
 
-		var body []byte
-
-		if bindErr := c.Bind(&body); bindErr != nil {
-			e.Logger.Fatal(bindErr)
+		//if bindErr := c.Bind(&body); bindErr != nil {
+		//	e.Logger.Fatal(bindErr)
+		//}
+		body, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			e.Logger.Fatal(err)
 		}
-		//buf := bytes.NewBuffer([]byte(body))
 
 		var reduceData = map[string][]int{}
 
-		//decoder := gob.NewDecoder(buf)
-		//_ = decoder.Decode(&reduceData)
 		decError := json.Unmarshal(body, &reduceData)
 		if decError != nil {
 			e.Logger.Fatal("decode error:", decError)

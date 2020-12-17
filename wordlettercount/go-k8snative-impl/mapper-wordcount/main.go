@@ -4,19 +4,29 @@ import (
 	"encoding/json"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10GB"))
+	e.Use(middleware.BodyLimit("10MB"))
 
 	e.POST("/map", func(c echo.Context) error {
-		var str string
-		if bindErr := c.Bind(&str); bindErr != nil {
-			e.Logger.Fatal(bindErr)
+		//var str string
+		//if bindErr := c.Bind(&str); bindErr != nil {
+		//	e.Logger.Fatal(bindErr)
+		//}
+		var (
+			b   []byte
+			err error
+		)
+		if b, err = ioutil.ReadAll(c.Request().Body); err != nil {
+			e.Logger.Fatal(err)
 		}
+
+		str := string(b)
 
 		e.Logger.Print(str[:100]) // debug string, to be commented out!
 
