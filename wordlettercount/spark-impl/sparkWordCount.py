@@ -50,7 +50,7 @@ def outputFormat(words, wordsRange, categoryString, totalNum):
     for rank in range(wordsRange[0], wordsRange[1]):
         word = words[rank][0]
         category = categoryString
-        frequency = words[rank][1]
+        frequency = words[rank][1]/totalNum
         string = ("\t"+str(rank).ljust(10)+"\t"+word.ljust(20)+"\t"
             +category.ljust(10)+"\t"+str(frequency).ljust(20)+"\n")
         sys.stdout.write(string)
