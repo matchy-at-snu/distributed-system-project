@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lc-mapper
+  namespace: wordlettercount
+  labels:
+    app: lc-mapper
+spec:
+  ports:
+    - port: 8080
+      name: lc-mapper
+  clusterIP: None
+  selector:
+    app: lc-mapper
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: lc-mapper
+  namespace: wordlettercount
+spec:
+  serviceName: "lc-mapper"
+  replicas: 0
+  selector:
+    matchLabels:
+      app: lc-mapper
+  template:
+    metadata:
+      labels:
+        app: lc-mapper
+    spec:
+      containers:
+        - name: lc-mapper
+          image: matchy233/mapper-lettercount:v0.0.1
+          ports:
+            - containerPort: 8080
+              name: lc-mapper
