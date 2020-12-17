@@ -1,4 +1,5 @@
 FROM golang:1.15-alpine as builder
+LABEL stage=builder
 WORKDIR /usr/src/app
 COPY ./go.mod ./
 COPY ./go.sum ./
