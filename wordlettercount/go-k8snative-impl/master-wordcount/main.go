@@ -379,9 +379,9 @@ func (p kvList) Swap(i, j int) {
 func (p kvList) String() string {
 	n := len(p)
 	perc5lim := int(math.Ceil(float64(n) * 0.05))
-	popular := p[:perc5lim]
-	common := p[n/2-perc5lim : n/2+perc5lim]
-	rare := p[n-perc5lim:]
+	popular := p[:perc5lim+1]
+	common := p[n/2-perc5lim+1 : n/2+perc5lim]
+	rare := p[n-perc5lim-1:]
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 
