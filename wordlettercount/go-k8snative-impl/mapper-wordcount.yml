@@ -20,7 +20,7 @@ metadata:
   namespace: wordlettercount
 spec:
   serviceName: "wc-mapper"
-  replicas: 12
+  replicas: 0
   selector:
     matchLabels:
       app: wc-mapper

@@ -26,13 +26,6 @@ import (
 )
 
 func main() {
-	// out of cluster configuration
-	//var kubeconfig *string
-	//if home := homedir.HomeDir(); home != "" {
-	//	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	//} else {
-	//	kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
-	//}
 
 	inputStrPtr := flag.String("input", "",
 		"The input directory in the form of /path/to/output, must be provided")
@@ -43,14 +36,8 @@ func main() {
 
 	flag.Parse()
 
-	// Build config out of Kubeconfig
-	// fuck you Go
-	//if *kubeconfig != "" {
-	//	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	//} else {
 	log.Println("Get in-cluster k8s configuration...")
 	config, err := rest.InClusterConfig()
-	//}
 
 	if err != nil {
 		log.Fatal(err)
@@ -120,24 +107,24 @@ func main() {
 	}
 
 	// Delete wc-mapper deployment deletion
-	//defer func() {
-	//	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-	//		result, getErr := statefulSetClient.Get(
-	//			context.TODO(),
-	//			"wc-mapper",
-	//			metav1.GetOptions{})
-	//		if getErr != nil {
-	//			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
-	//		}
-	//
-	//		result.Spec.Replicas = int32Ptr(0)
-	//		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-	//		return updateErr
-	//	})
-	//	if retryErr != nil {
-	//		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
-	//	}
-	//}()
+	defer func() {
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			result, getErr := statefulSetClient.Get(
+				context.TODO(),
+				"wc-mapper",
+				metav1.GetOptions{})
+			if getErr != nil {
+				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+			}
+
+			result.Spec.Replicas = int32Ptr(0)
+			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+			return updateErr
+		})
+		if retryErr != nil {
+			log.Fatal(fmt.Errorf("Update failed %v", retryErr))
+		}
+	}()
 
 	// Open reducers
 	log.Println("Create reducers...")
@@ -160,24 +147,24 @@ func main() {
 	}
 
 	// Delete reducer deployment deletion
-	//defer func() {
-	//	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-	//		result, getErr := statefulSetClient.Get(
-	//			context.TODO(),
-	//			"reducers",
-	//			metav1.GetOptions{})
-	//		if getErr != nil {
-	//			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
-	//		}
-	//
-	//		result.Spec.Replicas = int32Ptr(0)
-	//		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-	//		return updateErr
-	//	})
-	//	if retryErr != nil {
-	//		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
-	//	}
-	//}()
+	defer func() {
+		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+			result, getErr := statefulSetClient.Get(
+				context.TODO(),
+				"reducers",
+				metav1.GetOptions{})
+			if getErr != nil {
+				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+			}
+
+			result.Spec.Replicas = int32Ptr(0)
+			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+			return updateErr
+		})
+		if retryErr != nil {
+			log.Fatal(fmt.Errorf("Update failed %v", retryErr))
+		}
+	}()
 
 	// {IP : {word : count}}
 

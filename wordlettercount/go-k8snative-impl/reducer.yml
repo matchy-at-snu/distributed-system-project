@@ -20,7 +20,7 @@ metadata:
   namespace: wordlettercount
 spec:
   serviceName: "reducers"
-  replicas: 5
+  replicas: 0
   selector:
     matchLabels:
       app: reducers
