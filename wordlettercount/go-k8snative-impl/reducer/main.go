@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"net/http"
 )
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.BodyLimit("10M"))
 
 	e.GET("/reduce", func(c echo.Context) error {
 		e.Logger.Print("I got the input!")

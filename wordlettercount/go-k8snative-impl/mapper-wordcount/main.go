@@ -3,12 +3,14 @@ package main
 import (
 	"encoding/json"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	"net/http"
 	"strings"
 )
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.BodyLimit("10M"))
 
 	e.GET("/map", func(c echo.Context) error {
 		str := c.QueryParam("str")
