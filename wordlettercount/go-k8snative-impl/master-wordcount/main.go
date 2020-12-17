@@ -119,24 +119,24 @@ func main() {
 	}
 
 	// Delete wc-mapper deployment deletion
-	defer func() {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			result, getErr := statefulSetClient.Get(
-				context.TODO(),
-				"wc-mapper",
-				metav1.GetOptions{})
-			if getErr != nil {
-				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
-			}
-
-			result.Spec.Replicas = int32Ptr(0)
-			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-			return updateErr
-		})
-		if retryErr != nil {
-			log.Fatal(fmt.Errorf("Update failed %v", retryErr))
-		}
-	}()
+	//defer func() {
+	//	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	//		result, getErr := statefulSetClient.Get(
+	//			context.TODO(),
+	//			"wc-mapper",
+	//			metav1.GetOptions{})
+	//		if getErr != nil {
+	//			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+	//		}
+	//
+	//		result.Spec.Replicas = int32Ptr(0)
+	//		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+	//		return updateErr
+	//	})
+	//	if retryErr != nil {
+	//		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
+	//	}
+	//}()
 
 	// Open reducers
 	log.Println("Create reducers...")
@@ -159,24 +159,24 @@ func main() {
 	}
 
 	// Delete reducer deployment deletion
-	defer func() {
-		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			result, getErr := statefulSetClient.Get(
-				context.TODO(),
-				"reducers",
-				metav1.GetOptions{})
-			if getErr != nil {
-				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
-			}
-
-			result.Spec.Replicas = int32Ptr(0)
-			_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
-			return updateErr
-		})
-		if retryErr != nil {
-			log.Fatal(fmt.Errorf("Update failed %v", retryErr))
-		}
-	}()
+	//defer func() {
+	//	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	//		result, getErr := statefulSetClient.Get(
+	//			context.TODO(),
+	//			"reducers",
+	//			metav1.GetOptions{})
+	//		if getErr != nil {
+	//			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+	//		}
+	//
+	//		result.Spec.Replicas = int32Ptr(0)
+	//		_, updateErr := statefulSetClient.Update(context.TODO(), result, metav1.UpdateOptions{})
+	//		return updateErr
+	//	})
+	//	if retryErr != nil {
+	//		log.Fatal(fmt.Errorf("Update failed %v", retryErr))
+	//	}
+	//}()
 
 	// when they are ready send GET to them to retrieve message
 	// {IP : {word : count}}
@@ -215,25 +215,62 @@ func main() {
 			q.Add("str", chunk)
 			req.URL.RawQuery = q.Encode()
 
-			res, _ := client.Do(req)
-			body, _ := ioutil.ReadAll(res.Body)
-			_ = res.Body.Close()
+			var (
+				res *http.Response
+				retries int = 3
+				reqErr error
+			)
+			for retries > 0 {
+				res, reqErr = client.Do(req)
+				if reqErr != nil {
+					log.Println(reqErr)
+					retries -= 1
+				} else {
+					break
+				}
+			}
 
-			buf := bytes.NewBuffer(body)
+			if res != nil {
+				defer res.Body.Close()
 
-			var decodeMap map[string]int
+				body, readErr := ioutil.ReadAll(res.Body)
+				if readErr != nil {
+					log.Fatal(readErr)
+				}
 
-			decoder := gob.NewDecoder(buf)
-			_ = decoder.Decode(&decodeMap)
+				buf := bytes.NewBuffer(body)
 
-			mapResult[host] = decodeMap
+				var decodeMap map[string]int
+
+				decoder := gob.NewDecoder(buf)
+				decodeErr := decoder.Decode(&decodeMap)
+				if decodeErr != nil {
+					log.Fatal("decode error:", decodeErr)
+				}
+
+				mapResult[host] = decodeMap
+			} else {
+				log.Fatal("Didn't get anything, WTF?")
+			}
+
 		}(host, chunk)
 	}
 
 	wgm.Wait()
 
 	log.Println("Mapping finished!")
+
+	for ip, host := range mapResult {
+		log.Println(ip)
+		for word, count := range host {
+			log.Println(word, count)
+			break
+		}
+		break
+	}
+
 	log.Println("Start shuffling...")
+
 	// Shuffle
 	var shuffleResult = map[string][]int{}
 	for _, host := range mapResult {
@@ -378,7 +415,7 @@ func (p kvList) String() string {
 	perc5lim := int(math.Ceil(float64(n) * 0.05))
 	popular := p[:perc5lim]
 	common := p[n/2-perc5lim : n/2+perc5lim]
-	rare := p[n-perc5lim-1:]
+	rare := p[n-perc5lim:]
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 
@@ -395,7 +432,7 @@ func (p kvList) String() string {
 	}
 	for i, e := range rare {
 		table.Append([]string{
-			"RARE", string(n - perc5lim - 1 + i), e.Key, string(e.Value),
+			"RARE", string(n - perc5lim + i), e.Key, string(e.Value),
 		})
 	}
 
@@ -443,7 +480,7 @@ func downloadFile(object string) ([]byte, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ioutil.ReadAll: %v", err)
 	}
-	fmt.Printf("Blob %v downloaded.\n", object)
+	log.Printf("Blob %v downloaded.\n", object)
 	return data, nil
 }
 
@@ -468,7 +505,7 @@ func uploadFile(object string, data string) error {
 	if err := wc.Close(); err != nil {
 		return fmt.Errorf("Writer.Close: %v", err)
 	}
-	fmt.Printf("Blob %v uploaded.\n", object)
+	log.Printf("Blob %v uploaded.\n", object)
 	return nil
 }
 

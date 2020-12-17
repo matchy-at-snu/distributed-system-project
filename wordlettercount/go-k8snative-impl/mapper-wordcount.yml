@@ -20,7 +20,7 @@ metadata:
   namespace: wordlettercount
 spec:
   serviceName: "wc-mapper"
-  replicas: 0
+  replicas: 12
   selector:
     matchLabels:
       app: wc-mapper
@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: wc-mapper
-          image: matchy233/mapper-wordcount:v0.0.1
+          image: matchy233/mapper-wordcount:v0.0.6
           ports:
             - containerPort: 8080
               name: wc-mapper

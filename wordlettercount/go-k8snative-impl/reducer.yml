@@ -20,7 +20,7 @@ metadata:
   namespace: wordlettercount
 spec:
   serviceName: "reducers"
-  replicas: 0
+  replicas: 5
   selector:
     matchLabels:
       app: reducers
@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: reducer
-          image: matchy233/reducer:v0.0.3
+          image: matchy233/reducer:v0.0.6
           ports:
             - containerPort: 8080
               name: reducer
