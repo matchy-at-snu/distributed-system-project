@@ -1,9 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"cloud.google.com/go/storage"
-	"encoding/gob"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/olekukonko/tablewriter"
@@ -19,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -216,9 +216,9 @@ func main() {
 			req.URL.RawQuery = q.Encode()
 
 			var (
-				res *http.Response
+				res     *http.Response
 				retries int = 3
-				reqErr error
+				reqErr  error
 			)
 			for retries > 0 {
 				res, reqErr = client.Do(req)
@@ -233,22 +233,28 @@ func main() {
 			if res != nil {
 				defer res.Body.Close()
 
-				body, readErr := ioutil.ReadAll(res.Body)
-				if readErr != nil {
-					log.Fatal(readErr)
+				//
+				//body, readErr := ioutil.ReadAll(res.Body)
+				//if readErr != nil {
+				//	log.Fatal(readErr)
+				//}
+				//
+				//buf := bytes.NewBuffer(body)
+				//
+				var decodedMap map[string]int
+				decError := json.NewDecoder(res.Body).Decode(&decodedMap)
+				if decError != nil {
+					log.Fatal("decode error: ", decError)
 				}
 
-				buf := bytes.NewBuffer(body)
+				//
+				//decoder := gob.NewDecoder(buf)
+				//decodeErr := decoder.Decode(&decodeMap)
+				//if decodeErr != nil {
+				//	log.Fatal("decode error:", decodeErr)
+				//}
 
-				var decodeMap map[string]int
-
-				decoder := gob.NewDecoder(buf)
-				decodeErr := decoder.Decode(&decodeMap)
-				if decodeErr != nil {
-					log.Fatal("decode error:", decodeErr)
-				}
-
-				mapResult[host] = decodeMap
+				mapResult[host] = decodedMap
 			} else {
 				log.Fatal("Didn't get anything, WTF?")
 			}
@@ -345,25 +351,37 @@ func main() {
 			defer wgr.Done()
 			req, _ := http.NewRequest("GET", fmt.Sprintf(
 				"http://%s:%s/reduce", host, os.Getenv("REDUCER_PORT")), nil)
-			buf := new(bytes.Buffer)
+			//buf := new(bytes.Buffer)
 
-			encoder := gob.NewEncoder(buf)
-			_ = encoder.Encode(words)
+			//encoder := gob.NewEncoder(buf)
+			//_ = encoder.Encode(words)
+
+			b, encError := json.Marshal(words)
+			if encError != nil {
+				log.Fatal("encode error:", encError)
+			}
 
 			q := req.URL.Query()
-			q.Add("body", string(buf.Bytes()))
+			q.Add("body", string(b))
 			req.URL.RawQuery = q.Encode()
 
-			res, _ := client.Do(req)
-			body, _ := ioutil.ReadAll(res.Body)
-			_ = res.Body.Close()
-
-			buf = bytes.NewBuffer(body)
+			res, reqError := client.Do(req)
+			if reqError != nil {
+				log.Fatal("reducer http request error: ", reqError)
+			}
+			//body, _ := ioutil.ReadAll(res.Body)
+			//_ = res.Body.Close()
+			//
+			//b = bytes.NewBuffer(body)
 
 			var decodedReduce = map[string]int{}
+			decError := json.NewDecoder(res.Body).Decode(&decodedReduce)
+			if decError != nil {
+				log.Fatal(decError)
+			}
 
-			decoder := gob.NewDecoder(buf)
-			_ = decoder.Decode(&decodedReduce)
+			//decoder := gob.NewDecoder(buf)
+			//_ = decoder.Decode(&decodedReduce)
 
 			reduceResult[host] = decodedReduce
 		}(host, words)
@@ -422,17 +440,17 @@ func (p kvList) String() string {
 	table.SetHeader([]string{"CATEGORY", "RANK", "WORD", "FREQUENCY"})
 	for i, e := range popular {
 		table.Append([]string{
-			"POPULAR", string(i), e.Key, string(e.Value),
+			"POPULAR", strconv.Itoa(i), e.Key, string(rune(e.Value)),
 		})
 	}
 	for i, e := range common {
 		table.Append([]string{
-			"COMMON", string(i + n/2 - perc5lim), e.Key, string(e.Value),
+			"COMMON", string(rune(i + n/2 - perc5lim)), e.Key, string(rune(e.Value)),
 		})
 	}
 	for i, e := range rare {
 		table.Append([]string{
-			"RARE", string(n - perc5lim + i), e.Key, string(e.Value),
+			"RARE", string(rune(n - perc5lim + i)), e.Key, string(rune(e.Value)),
 		})
 	}
 

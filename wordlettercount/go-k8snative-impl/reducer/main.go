@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 	"github.com/labstack/echo"
 	"net/http"
 )
@@ -14,12 +13,16 @@ func main() {
 		e.Logger.Print("I got the input!")
 
 		body := c.QueryParam("body")
-		buf := bytes.NewBuffer([]byte(body))
+		//buf := bytes.NewBuffer([]byte(body))
 
 		var reduceData = map[string][]int{}
 
-		decoder := gob.NewDecoder(buf)
-		_ = decoder.Decode(&reduceData)
+		//decoder := gob.NewDecoder(buf)
+		//_ = decoder.Decode(&reduceData)
+		decError := json.Unmarshal([]byte(body), &reduceData)
+		if decError != nil {
+			e.Logger.Fatal("decode error:", decError)
+		}
 
 		e.Logger.Print(reduceData)
 
@@ -34,14 +37,17 @@ func main() {
 
 		for k, v := range reducing {
 			e.Logger.Print("I got the output! Check first result: ", k, ": ", v)
-			break;
+			break
 		}
 
-		buf = new(bytes.Buffer)
-		encoder := gob.NewEncoder(buf)
-		_ = encoder.Encode(reducing)
-
-		return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
+		//buf = new(bytes.Buffer)
+		//encoder := gob.NewEncoder(buf)
+		//_ = encoder.Encode(reducing)
+		//
+		//return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
+		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+		c.Response().WriteHeader(http.StatusOK)
+		return json.NewEncoder(c.Response()).Encode(reducing)
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))

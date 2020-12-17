@@ -1,8 +1,7 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 	"github.com/labstack/echo"
 	"net/http"
 	"strings"
@@ -12,8 +11,6 @@ func main() {
 	e := echo.New()
 
 	e.GET("/map", func(c echo.Context) error {
-		e.Logger.Print("I got the input!")
-
 		str := c.QueryParam("str")
 
 		e.Logger.Print(str)
@@ -31,27 +28,26 @@ func main() {
 			words := strings.Split(line, " ")
 			for _, word := range words {
 				if _, prs := mapping[word]; prs {
-					mapping[word] +=1
+					mapping[word] += 1
 				} else {
 					mapping[word] = 1
 				}
 			}
 		}
 
+		e.Logger.Print("I got the output! Check first 5 result: ")
+		var count = 0
 		for k, v := range mapping {
-			e.Logger.Print("I got the output! Check first result: ", k, ": ", v)
-			break
+			e.Logger.Print(k, ": ", v)
+			count++
+			if count >= 5 {
+				break
+			}
 		}
 
-		buf := new(bytes.Buffer)
-		encoder := gob.NewEncoder(buf)
-
-		encErr := encoder.Encode(mapping)
-		if encErr != nil {
-			return c.String(http.StatusBadRequest, encErr.Error())
-		}
-
-		return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
+		c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
+		c.Response().WriteHeader(http.StatusOK)
+		return json.NewEncoder(c.Response()).Encode(mapping)
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))
