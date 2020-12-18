@@ -540,27 +540,31 @@ func (p kvList) Swap(i, j int) {
 
 func (p kvList) String() string {
 	n := len(p)
+	var total = 0
+	for _, e := range p {
+		total += e.Value
+	}
 	perc5lim := int(math.Ceil(float64(n) * 0.05))
-	popular := p[:perc5lim+1]
+	popular := p[:perc5lim]
 	common := p[(n-perc5lim)/2 : (n-perc5lim)/2+perc5lim]
-	rare := p[n-perc5lim-1:]
+	rare := p[n-perc5lim:]
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 
 	table.SetHeader([]string{"CATEGORY", "RANK", "WORD", "FREQUENCY"})
 	for i, e := range popular {
 		table.Append([]string{
-			"POPULAR", strconv.Itoa(i), e.Key, strconv.Itoa(e.Value),
+			"POPULAR", strconv.Itoa(i), e.Key, fmt.Sprintf("%.9f", float64(e.Value)/float64(total)),
 		})
 	}
 	for i, e := range common {
 		table.Append([]string{
-			"COMMON", strconv.Itoa(i + n/2 - perc5lim), e.Key, strconv.Itoa(e.Value),
+			"COMMON", strconv.Itoa(i + (n-perc5lim)/2), e.Key, fmt.Sprintf("%.9f", float64(e.Value)/float64(total)),
 		})
 	}
 	for i, e := range rare {
 		table.Append([]string{
-			"RARE", strconv.Itoa(n - perc5lim + i), e.Key, strconv.Itoa(e.Value),
+			"RARE", strconv.Itoa(n - perc5lim + i), e.Key, fmt.Sprintf("%.9f", float64(e.Value)/float64(total)),
 		})
 	}
 
