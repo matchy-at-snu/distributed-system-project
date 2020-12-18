@@ -10,7 +10,7 @@ import (
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10MB"))
+	e.Use(middleware.BodyLimit("100MB"))
 
 	e.POST("/reduce", func(c echo.Context) error {
 

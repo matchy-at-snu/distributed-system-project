@@ -12,7 +12,7 @@ import (
 
 func main() {
 	e := echo.New()
-	e.Use(middleware.BodyLimit("10MB"))
+	e.Use(middleware.BodyLimit("100MB"))
 
 	e.POST("/map/letter", func(c echo.Context) error {
 		var (
