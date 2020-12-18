@@ -1,11 +1,11 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: lc-master
+  name: wc-master
   namespace: wordlettercount
 spec:
   selector:
-    app: lc-master
+    app: wc-master
   ports:
     - protocol: TCP
       port: 8080
@@ -14,26 +14,26 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: lc-master
+  name: wc-master
   namespace: wordlettercount
   labels:
-    app: lc-master
+    app: wc-master
 spec:
   serviceAccountName: ksa
   containers:
-    - name: lc-master
-      image: matchy233/master-lettercount:v0.0.3
+    - name: wc-master
+      image: matchy233/master:v0.0.1
       ports:
         - containerPort: 8080
           name: mapper
       env:
         - name: MAPPER_HOST
-          value: "lc-mapper"
+          value: "wc-mapper"
         - name: REDUCER_HOST
           value: "reducers"
         - name: MAPPER_PORT
           value: "8080"
         - name: REDUCER_PORT
           value: "8080"
-      args: ["-input=inputs/input1", "-output=outputs/lcoutput1"]
+      args: [ "-input=inputs/input1", "-output=outputs/output2" ]
   restartPolicy: Never

@@ -26,13 +26,14 @@ import (
 )
 
 func main() {
+	start := time.Now()
 
 	inputStrPtr := flag.String("input", "",
 		"The input directory in the form of /path/to/output, must be provided")
 	outputStrPtr := flag.String("output", "",
 		"The output directory in the form of /path/to/output, default to stdout")
 	chunkSizePtr := flag.Int("chunkSize", 1024,
-		"The maximum chunk size (in KB) which will be fed to the wc-mapper, default to 1024KB")
+		"The maximum chunk size (in KB) which will be fed to the mappers, default to 1024KB")
 
 	flag.Parse()
 
@@ -76,7 +77,7 @@ func main() {
 		log.Println("Get the latest version of Statefulset...")
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"wc-mapper",
+			"mappers",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
@@ -115,7 +116,7 @@ func main() {
 		time.Sleep(5 * time.Second)
 		result, getErr := statefulSetClient.Get(
 			context.TODO(),
-			"wc-mapper",
+			"mappers",
 			metav1.GetOptions{})
 		if getErr != nil {
 			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
@@ -126,12 +127,12 @@ func main() {
 		}
 	}
 
-	// Delete wc-mapper deployment deletion
+	// Delete mappers deployment deletion
 	defer func() {
 		retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 			result, getErr := statefulSetClient.Get(
 				context.TODO(),
-				"wc-mapper",
+				"mappers",
 				metav1.GetOptions{})
 			if getErr != nil {
 				log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
@@ -184,16 +185,16 @@ func main() {
 	}
 
 	// IP: {word: count, word: count ...}
-	var mapResult = map[string]map[string]int{}
+	var wordMapResult = map[string]map[string]int{}
 
-	log.Println("Start mapping...")
+	log.Println("Start wordcount mapping...")
 
-	var wgm sync.WaitGroup
-	wgm.Add(len(mapperIPs))
+	var wgmWord sync.WaitGroup
+	wgmWord.Add(len(mapperIPs))
 
 	for host, chunk := range mapIPChunk {
 		go func(host string, chunk string) {
-			defer wgm.Done()
+			defer wgmWord.Done()
 
 			var (
 				res     *http.Response
@@ -202,7 +203,7 @@ func main() {
 			)
 			for retries > 0 {
 				res, reqErr = http.Post(
-					fmt.Sprintf("http://%s:%s/map",
+					fmt.Sprintf("http://%s:%s/map/word",
 						host, os.Getenv("MAPPER_PORT")),
 					"text/plain",
 					strings.NewReader(chunk),
@@ -225,7 +226,7 @@ func main() {
 					log.Fatal("decode error: ", decError)
 				}
 
-				mapResult[host] = decodedMap
+				wordMapResult[host] = decodedMap
 			} else {
 				log.Fatal("Status code looks bad! ", res.Status)
 			}
@@ -233,17 +234,17 @@ func main() {
 		}(host, chunk)
 	}
 
-	wgm.Wait()
+	wgmWord.Wait()
 
 	log.Println("Mapping finished!")
 
 	log.Println("Start shuffling...")
 
 	// Shuffle
-	var shuffleResult = map[string][]int{}
-	for _, host := range mapResult {
+	var wordShuffleResult = map[string][]int{}
+	for _, host := range wordMapResult {
 		for word, count := range host {
-			shuffleResult[word] = append(shuffleResult[word], count)
+			wordShuffleResult[word] = append(wordShuffleResult[word], count)
 		}
 	}
 
@@ -277,7 +278,7 @@ func main() {
 	}
 
 	var words []string
-	for word := range shuffleResult {
+	for word := range wordShuffleResult {
 		words = append(words, word)
 	}
 
@@ -294,7 +295,7 @@ func main() {
 		reduceWords := words[start:min(start+reduceChunkSize, len(words))]
 		mapIPWords[reducerIP.String()] = map[string][]int{}
 		for _, reduceKey := range reduceWords {
-			mapIPWords[reducerIP.String()][reduceKey] = shuffleResult[reduceKey]
+			mapIPWords[reducerIP.String()][reduceKey] = wordShuffleResult[reduceKey]
 		}
 	}
 
@@ -304,7 +305,7 @@ func main() {
 	wgr.Add(5)
 
 	// IP : {word: count}
-	var reduceResult = map[string]map[string]int{}
+	var wordReduceResult = map[string]map[string]int{}
 
 	for host, words := range mapIPWords {
 		go func(host string, words map[string][]int) {
@@ -331,7 +332,7 @@ func main() {
 				log.Fatal(decError)
 			}
 
-			reduceResult[host] = decodedReduce
+			wordReduceResult[host] = decodedReduce
 		}(host, words)
 	}
 
@@ -339,17 +340,178 @@ func main() {
 
 	log.Println("Reducing finished!")
 
-	kvp := tokvList(reduceResult)
+	wordKvp := tokvList(wordReduceResult)
 
 	log.Println("Sorting results...")
-	sort.Sort(sort.Reverse(kvp))
+	sort.Sort(sort.Reverse(wordKvp))
+
+	// Letter count starts here
+
+	var letterMapResult = map[string]map[string]int{}
+
+	log.Println("Start wordcount mapping...")
+
+	var wgmLetter sync.WaitGroup
+	wgmLetter.Add(len(mapperIPs))
+
+	for host, chunk := range mapIPChunk {
+		go func(host string, chunk string) {
+			defer wgmLetter.Done()
+
+			var (
+				res     *http.Response
+				retries = 3
+				reqErr  error
+			)
+			for retries > 0 {
+				res, reqErr = http.Post(
+					fmt.Sprintf("http://%s:%s/map/letter",
+						host, os.Getenv("MAPPER_PORT")),
+					"text/plain",
+					strings.NewReader(chunk),
+				)
+				if reqErr != nil {
+					log.Println(reqErr)
+					retries -= 1
+				} else {
+					break
+				}
+			}
+
+			if res.StatusCode == http.StatusOK {
+				defer res.Body.Close()
+
+				var decodedMap map[string]int
+
+				decError := json.NewDecoder(res.Body).Decode(&decodedMap)
+				if decError != nil {
+					log.Fatal("decode error: ", decError)
+				}
+
+				letterMapResult[host] = decodedMap
+			} else {
+				log.Fatal("Status code looks bad! ", res.Status)
+			}
+
+		}(host, chunk)
+	}
+
+	wgmLetter.Wait()
+
+	log.Println("Mapping finished!")
+
+	log.Println("Start shuffling...")
+
+	// Shuffle
+	var letterShuffleResult = map[string][]int{}
+	for _, host := range letterMapResult {
+		for letter, count := range host {
+			letterShuffleResult[letter] = append(letterShuffleResult[letter], count)
+		}
+	}
+
+	log.Println("Shuffling finished!")
+
+	// It opens really slow, so still, we have to wait here
+	for {
+		time.Sleep(1 * time.Second)
+		result, getErr := statefulSetClient.Get(
+			context.TODO(),
+			"reducers",
+			metav1.GetOptions{})
+		if getErr != nil {
+			log.Fatal(fmt.Errorf("Failed to get latest version of Statefulset: %v", getErr))
+		}
+		log.Printf("Updating reducers: expect %v, have %v\n", *result.Spec.Replicas, result.Status.ReadyReplicas)
+		if *result.Spec.Replicas == result.Status.ReadyReplicas {
+			break
+		}
+	}
+
+	// Send to reducer
+
+	var letters []string
+	for letter := range letterShuffleResult {
+		letters = append(letters, letter)
+	}
+
+	reduceChunkSize = int(math.Ceil(float64(len(letters)) / float64(len(reducerIPs))))
+
+	// { IP : {words : [count, count, count, ... ]}}
+	mapIPLetters := make(map[string]map[string][]int)
+
+	for idx, reducerIP := range reducerIPs {
+		var start = idx * reduceChunkSize
+		if start >= len(letters) {
+			break
+		}
+		reduceWords := letters[start:min(start+reduceChunkSize, len(letters))]
+		mapIPLetters[reducerIP.String()] = map[string][]int{}
+		for _, reduceKey := range reduceWords {
+			mapIPLetters[reducerIP.String()][reduceKey] = letterShuffleResult[reduceKey]
+		}
+	}
+
+	log.Println("Start reducing...")
+
+	var wgrLetter sync.WaitGroup
+	wgrLetter.Add(5)
+
+	// IP : {word: count}
+	var letterReduceResult = map[string]map[string]int{}
+
+	for host, letters := range mapIPLetters {
+		go func(host string, letters map[string][]int) {
+			defer wgrLetter.Done()
+
+			b, encError := json.Marshal(letters)
+			if encError != nil {
+				log.Fatal("encode error:", encError)
+			}
+
+			res, reqError := http.Post(
+				fmt.Sprintf("http://%s:%s/reduce",
+					host, os.Getenv("REDUCER_PORT")),
+				"text/plain",
+				bytes.NewReader(b),
+			)
+			if reqError != nil {
+				log.Fatal("reducer http request error: ", reqError)
+			}
+
+			var decodedReduce = map[string]int{}
+			decError := json.NewDecoder(res.Body).Decode(&decodedReduce)
+			if decError != nil {
+				log.Fatal(decError)
+			}
+
+			letterReduceResult[host] = decodedReduce
+		}(host, letters)
+	}
+
+	wgrLetter.Wait()
+
+	log.Println("Reducing finished!")
+
+	letterKvp := tokvList(letterReduceResult)
+
+	log.Println("Sorting results...")
+	sort.Sort(sort.Reverse(wordKvp))
+	sort.Sort(sort.Reverse(letterKvp))
+
+	wholeTable := "WORDCOUNT RESULT\n" +
+		wordKvp.String() +
+		"\nLETTERCOUNT RESULT\n" +
+		letterKvp.String() +
+		"\nexecution time: " +
+		fmt.Sprintf("%s\n", time.Since(start))
 
 	// Write output to Stdout or designated output file
 	if *outputStrPtr == "" {
 		log.Println("Use std out")
 	} else {
 		log.Printf("Use output path to print output! Check it at gs://%s\n", output)
-		if err := uploadFile(output, kvp.String()); err != nil {
+		if err := uploadFile(output, wholeTable); err != nil {
 			log.Fatal(err)
 		}
 	}
