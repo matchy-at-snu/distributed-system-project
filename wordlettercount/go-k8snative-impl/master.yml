@@ -1,11 +1,11 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: wc-master
+  name: master
   namespace: wordlettercount
 spec:
   selector:
-    app: wc-master
+    app: master
   ports:
     - protocol: TCP
       port: 8080
@@ -14,21 +14,21 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: wc-master
+  name: master
   namespace: wordlettercount
   labels:
-    app: wc-master
+    app: master
 spec:
   serviceAccountName: ksa
   containers:
-    - name: wc-master
-      image: matchy233/master:v0.0.1
+    - name: master
+      image: matchy233/master:v0.0.4
       ports:
         - containerPort: 8080
-          name: mapper
+          name: master
       env:
         - name: MAPPER_HOST
-          value: "wc-mapper"
+          value: "mappers"
         - name: REDUCER_HOST
           value: "reducers"
         - name: MAPPER_PORT

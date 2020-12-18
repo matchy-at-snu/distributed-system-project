@@ -29,6 +29,22 @@ spec:
       labels:
         app: reducers
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: io/role
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: mappers
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: key
+                    operator: NotIn
+                    values:
+                      - node1
       containers:
         - name: reducer
           image: matchy233/reducer:v1.0.0

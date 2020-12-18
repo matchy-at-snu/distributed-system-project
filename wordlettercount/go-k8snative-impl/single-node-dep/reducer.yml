@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reducers
+  namespace: wordlettercount
+  labels:
+    app: reducers
+spec:
+  ports:
+    - port: 8080
+      name: reducers
+  clusterIP: None
+  selector:
+    app: reducers
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reducers
+  namespace: wordlettercount
+spec:
+  serviceName: "reducers"
+  replicas: 0
+  selector:
+    matchLabels:
+      app: reducers
+  template:
+    metadata:
+      labels:
+        app: reducers
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: key
+                    operator: NotIn
+                    values:
+                      - node1
+                      - node2
+      containers:
+        - name: reducer
+          image: matchy233/reducer:v1.0.0
+          ports:
+            - containerPort: 8080
+              name: reducer

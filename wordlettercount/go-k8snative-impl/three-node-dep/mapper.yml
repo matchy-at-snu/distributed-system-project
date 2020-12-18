@@ -29,6 +29,13 @@ spec:
       labels:
         app: mappers
     spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: io/role
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: mappers
       containers:
         - name: mappers
           image: matchy233/mapper:v0.0.1
