@@ -1,25 +1,30 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
+	"encoding/json"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
+	"io/ioutil"
 	"net/http"
 )
 
 func main() {
 	e := echo.New()
+	e.Use(middleware.BodyLimit("10MB"))
 
-	e.GET("/reduce", func(c echo.Context) error {
-		e.Logger.Info("I got the input!")
+	e.POST("/reduce", func(c echo.Context) error {
 
-		body := c.QueryParam("body")
-		buf := bytes.NewBuffer([]byte(body))
+		body, err := ioutil.ReadAll(c.Request().Body)
+		if err != nil {
+			e.Logger.Fatal(err)
+		}
 
 		var reduceData = map[string][]int{}
 
-		decoder := gob.NewDecoder(buf)
-		_ = decoder.Decode(&reduceData)
+		decError := json.Unmarshal(body, &reduceData)
+		if decError != nil {
+			e.Logger.Fatal("decode error:", decError)
+		}
 
 		var reducing = map[string]int{}
 
@@ -30,16 +35,12 @@ func main() {
 			}
 		}
 
-		for k, v := range reducing {
-			e.Logger.Info("I got the output! Check first result: ", k, ": ", v)
-			break;
+		data, encErr := json.Marshal(reducing)
+		if encErr != nil {
+			e.Logger.Fatal(encErr)
 		}
 
-		buf = new(bytes.Buffer)
-		encoder := gob.NewEncoder(buf)
-		_ = encoder.Encode(reducing)
-
-		return c.Blob(http.StatusOK, "application/octet-stream", buf.Bytes())
+		return c.JSONBlob(http.StatusOK, data)
 	})
 
 	e.Logger.Fatal(e.Start(":8080"))

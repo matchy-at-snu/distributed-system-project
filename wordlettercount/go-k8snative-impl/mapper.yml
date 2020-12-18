@@ -1,37 +1,37 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: wc-mapper
+  name: mappers
   namespace: wordlettercount
   labels:
-    app: wc-mapper
+    app: mappers
 spec:
   ports:
     - port: 8080
-      name: wc-mapper
+      name: mappers
   clusterIP: None
   selector:
-    app: wc-mapper
+    app: mappers
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: wc-mapper
+  name: mappers
   namespace: wordlettercount
 spec:
-  serviceName: "wc-mapper"
+  serviceName: "mappers"
   replicas: 0
   selector:
     matchLabels:
-      app: wc-mapper
+      app: mappers
   template:
     metadata:
       labels:
-        app: wc-mapper
+        app: mappers
     spec:
       containers:
-        - name: wc-mapper
-          image: matchy233/mapper-wordcount:v0.0.1
+        - name: mappers
+          image: matchy233/mapper:v0.0.1
           ports:
             - containerPort: 8080
-              name: wc-mapper
+              name: mappers
