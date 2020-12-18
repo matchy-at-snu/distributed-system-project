@@ -22,7 +22,7 @@ spec:
   serviceAccountName: ksa
   containers:
     - name: lc-master
-      image: matchy233/master-lettercount:v0.0.1
+      image: matchy233/master-lettercount:v0.0.3
       ports:
         - containerPort: 8080
           name: mapper

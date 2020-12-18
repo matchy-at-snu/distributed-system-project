@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: lc-mapper
-          image: matchy233/mapper-lettercount:v0.0.1
+          image: matchy233/mapper-lettercount:v0.0.3
           ports:
             - containerPort: 8080
               name: lc-mapper

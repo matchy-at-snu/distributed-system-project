@@ -30,7 +30,7 @@ func main() {
 		mapping := map[string]int{}
 
 		// FIXME: regex not working
-		var reNoChar = regexp.MustCompile("[^\\p{Greek}\\w]")
+		var reNoChar = regexp.MustCompile("[^\\p{L}\\w]")
 		var reEmDash = regexp.MustCompile("[0-9]|_")
 
 		for _, line := range lines {
